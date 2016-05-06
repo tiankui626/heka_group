@@ -86,10 +86,10 @@ func ReadValue(msg *message.Message, key string) string {
 	}
 	if key == "City" && IsProvince && len(key) > 5 {
 		bytes_v := []byte(value)
-		bytes_v[len(bytes_key)-1] = '0'
-		bytes_v[len(bytes_key)-2] = '0'
-		bytes_v[len(bytes_key)-3] = '0'
-		bytes_v[len(bytes_key)-4] = '0'
+		bytes_v[len(bytes_v)-1] = '0'
+		bytes_v[len(bytes_v)-2] = '0'
+		bytes_v[len(bytes_v)-3] = '0'
+		bytes_v[len(bytes_v)-4] = '0'
 		value = string(bytes_key)
 	}
 	return value
