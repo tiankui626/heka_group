@@ -213,7 +213,7 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 		case pack, ok := <-inChan:
 			if !ok {
 				//todo
-				break
+				goto end
 			}
 			f.msgLoopCount = pack.MsgLoopCount
 			f.ProcessMessage(pack.Message)
@@ -225,7 +225,8 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 			f.comitter(fr, h)
 		}
 	}
-
+end:
+	return
 }
 
 // Fetch correct output and iterate over received messages, checking against
