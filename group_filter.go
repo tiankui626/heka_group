@@ -12,11 +12,13 @@ import (
 )
 
 type GroupFilter struct {
-	msgLoopCount  uint
-	data          *map[string]*Value
-	tags          []string
-	groups        []string
-	value         string
+	msgLoopCount uint
+	data         *map[string]*Value
+	tags         []string
+	groups       []string
+	value        string
+	logger       string
+	serie
 	FlushInterval time.Duration
 }
 
@@ -25,6 +27,8 @@ type GroupConfig struct {
 	Groups   string `toml:"groups"`
 	Interval string `toml:"interval"`
 	Value    string `toml:"value"`
+	Logger   string
+	Serie
 }
 
 type Value struct {
@@ -110,6 +114,8 @@ func (f *GroupFilter) Init(config interface{}) error {
 	conf.Groups, _ = getConfString(config, "groups")
 	conf.Value, _ = getConfString(config, "value")
 	conf.Interval, _ = getConfString(config, "interval")
+	conf.Logger, _ = getConfString(config, "logger")
+	conf.Serie, _ = getConfString(config, "serie")
 	if len(conf.Tags) == 0 {
 		return errors.New("No 'tags' setting specified.")
 	} else {
@@ -126,6 +132,8 @@ func (f *GroupFilter) Init(config interface{}) error {
 	f.value = conf.Value
 
 	f.data = NewData()
+	f.logger = conf.Logger
+	f.serie = conf.Serie
 	fmt.Printf("config %+v", f)
 	return nil
 }
@@ -139,6 +147,8 @@ func (f *GroupFilter) InjectMessage(fr pipeline.FilterRunner, h pipeline.PluginH
 	}
 	pack.Message.SetUuid(uuid.NewRandom())
 	pack.Message.SetPayload(payload)
+	pack.Message.SetLogger(f.logger)
+	pack.Message.SetType("GroupFilter")
 	fr.Inject(pack)
 	return nil
 }
@@ -149,7 +159,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	}
 	var values []string
 	for key, v := range *f.data {
-		values = append(values, fmt.Sprintf("%s %s", key, v.Value()))
+		values = append(values, fmt.Sprintf("%s,%s %s", f.serie, key, v.Value()))
 		if len(values) > 100 {
 			f.InjectMessage(fr, h, strings.Join(values, "\n"))
 			fmt.Println(strings.Join(values, "\n"))
