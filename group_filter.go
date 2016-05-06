@@ -33,6 +33,22 @@ type Value struct {
 	counter int	
 }
 
+func getConfString(config interface{}, key string) (string , error){
+	var (
+		fieldConf interface{}
+		ok bool
+	)
+	conf := config.(pipeline.PluginConfig)
+	if fieldConf, ok = conf["key"]; !ok {
+		return "", errors.New(fmt.Sprintf("No '%s' setting", key))
+	}
+	value, ok := fieldConf.(string)
+	if ok {
+		return value, nil
+	}
+	return "", nil
+}
+
 func (v * Value)Value() string {
 	if len(v.valueName) == 0 || v.value == 0 {
 			return fmt.Sprintf("counter=%d", v.counter)
@@ -89,8 +105,12 @@ func (f * GroupFilter) ProcessMessage(msg * message.Message)  {
 func (f *GroupFilter) Init(config interface{}) error {
 	var (
 		err error
+		conf GroupConfig
 	)
-	conf := config.(*GroupConfig)
+	conf.Tags, _ = getConfString(config, "tags")
+	conf.Groups, _ = getConfString(config, "groups")
+	conf.Value, _ = getConfString(config, "value")
+	conf.Interval , _ = getConfString(config, "interval")
 	if len(conf.Tags) == 0{
 		return errors.New("No 'tags' setting specified.")
 	}else {
