@@ -124,7 +124,8 @@ func (f *GroupFilter) Init(config interface{}) error {
 		return errors.New("No 'interval' parse error.")
 	}
 	f.value = conf.Value
-	f.data = new(map[string]*Value)
+
+	f.data = &make(map[string]*Value)
 	return nil
 }
 
@@ -153,7 +154,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	if len(values) > 0 {
 		f.InjectMessage(fr, h, strings.Join(values, "\n"))
 	}
-	f.data = new(map[string]*Value)
+	f.data = &make(map[string]*Value)
 }
 
 func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper) {
