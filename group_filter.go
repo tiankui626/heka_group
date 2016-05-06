@@ -90,7 +90,7 @@ func ReadValue(msg *message.Message, key string) string {
 		bytes_v[len(bytes_v)-2] = '0'
 		bytes_v[len(bytes_v)-3] = '0'
 		bytes_v[len(bytes_v)-4] = '0'
-		value = string(bytes_key)
+		value = string(bytes_v)
 	}
 	return value
 }
