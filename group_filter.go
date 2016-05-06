@@ -19,6 +19,8 @@ type GroupFilter struct {
 	value         string
 	logger        string
 	serie         string
+	isProvince    bool
+	debug         bool
 	FlushInterval time.Duration
 }
 
@@ -27,7 +29,9 @@ type GroupConfig struct {
 	Groups   string `toml:"groups"`
 	Interval string `toml:"interval"`
 	Value    string `toml:"value"`
+	Province string
 	Logger   string
+	Debug    string
 	Serie    string
 }
 
@@ -36,6 +40,11 @@ type Value struct {
 	value     float64
 	counter   int
 }
+
+var (
+	Debug      = false
+	IsProvince = false
+)
 
 func getConfString(config interface{}, key string) (string, error) {
 	var (
@@ -61,6 +70,7 @@ func (v *Value) Value() string {
 }
 
 func ReadValue(msg *message.Message, key string) string {
+	var value string
 	if len(key) == 0 {
 		return ""
 	}
@@ -70,10 +80,19 @@ func ReadValue(msg *message.Message, key string) string {
 	fields := msg.GetFields()
 	for _, f := range fields {
 		if f.GetName() == key {
-			return f.GetValueString()[0]
+			value = f.GetValueString()[0]
+			break
 		}
 	}
-	return ""
+	if key == "City" && IsProvince && len(key) > 5 {
+		bytes_v := []byte(value)
+		bytes_v[len(bytes_key)-1] = '0'
+		bytes_v[len(bytes_key)-2] = '0'
+		bytes_v[len(bytes_key)-3] = '0'
+		bytes_v[len(bytes_key)-4] = '0'
+		value = string(bytes_key)
+	}
+	return value
 }
 
 func GetKeys(msg *message.Message, keys []string) string {
@@ -116,6 +135,8 @@ func (f *GroupFilter) Init(config interface{}) error {
 	conf.Interval, _ = getConfString(config, "interval")
 	conf.Logger, _ = getConfString(config, "logger")
 	conf.Serie, _ = getConfString(config, "serie")
+	conf.Province, _ = getConfString(config, "province")
+	conf.Debug, _ = getConfString(config, "debug")
 	if len(conf.Tags) == 0 {
 		return errors.New("No 'tags' setting specified.")
 	} else {
@@ -134,7 +155,11 @@ func (f *GroupFilter) Init(config interface{}) error {
 	f.data = NewData()
 	f.logger = conf.Logger
 	f.serie = conf.Serie
-	fmt.Printf("config %+v", f)
+	f.isProvince = (conf.Province == "1")
+	f.debug = (conf.Debug == "1")
+	if Debug {
+		fmt.Printf("config %+v", f)
+	}
 	return nil
 }
 
@@ -155,14 +180,18 @@ func (f *GroupFilter) InjectMessage(fr pipeline.FilterRunner, h pipeline.PluginH
 
 func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper) {
 	if len(*f.data) == 0 {
-		fmt.Println("zero")
+		return
+	} else if Debug {
+		fmt.Printf("data len:%s", len(*f.data))
 	}
 	var values []string
 	for key, v := range *f.data {
 		values = append(values, fmt.Sprintf("%s,%s %s", f.serie, key, v.Value()))
 		if len(values) > 100 {
 			f.InjectMessage(fr, h, strings.Join(values, "\n"))
-			fmt.Println(strings.Join(values, "\n"))
+			if Debug {
+				fmt.Println(strings.Join(values, "\n"))
+			}
 			values = values[0:0]
 		}
 	}
@@ -190,7 +219,9 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 			f.ProcessMessage(pack.Message)
 			pack.Recycle(nil)
 		case <-ticker:
-			fmt.Println("a tick")
+			if Debug {
+				fmt.Println("a tick")
+			}
 			f.comitter(fr, h)
 		}
 	}
