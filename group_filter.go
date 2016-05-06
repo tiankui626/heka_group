@@ -28,7 +28,7 @@ type GroupConfig struct {
 	Interval string `toml:"interval"`
 	Value    string `toml:"value"`
 	Logger   string
-	Serie
+	Serie    string
 }
 
 type Value struct {
