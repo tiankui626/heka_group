@@ -168,7 +168,7 @@ func NewData() *map[string]*Value {
 
 func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper) {
 	inChan := fr.InChan()
-	ticker := time.Tick(time.Duration(f.FlushInterval) * time.Millisecond)
+	ticker := time.Tick(f.FlushInterval)
 	for {
 		select {
 		case pack, ok := <-inChan:
