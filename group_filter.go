@@ -12,13 +12,13 @@ import (
 )
 
 type GroupFilter struct {
-	msgLoopCount uint
-	data         *map[string]*Value
-	tags         []string
-	groups       []string
-	value        string
-	logger       string
-	serie
+	msgLoopCount  uint
+	data          *map[string]*Value
+	tags          []string
+	groups        []string
+	value         string
+	logger        string
+	serie         string
 	FlushInterval time.Duration
 }
 
