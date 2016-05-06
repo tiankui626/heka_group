@@ -144,11 +144,15 @@ func (f *GroupFilter) InjectMessage(fr pipeline.FilterRunner, h pipeline.PluginH
 }
 
 func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper) {
+	if len(*f.data) == 0 {
+		fmt.Println("zero")
+	}
 	var values []string
 	for key, v := range *f.data {
 		values = append(values, fmt.Sprintf("%s %s", key, v.Value()))
 		if len(values) > 100 {
 			f.InjectMessage(fr, h, strings.Join(values, "\n"))
+			fmt.Println(strings.Join(values, "\n"))
 			values = values[0:0]
 		}
 	}
@@ -176,6 +180,7 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 			f.ProcessMessage(pack.Message)
 			pack.Recycle(nil)
 		case <-ticker:
+			fmt.Println("a tick")
 			f.comitter(fr, h)
 		}
 	}
