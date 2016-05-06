@@ -157,7 +157,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	f.data = NewData()
 }
 func NewData() *map[string]*Value {
-	data = make(map[string]*Value)
+	data := make(map[string]*Value)
 	return &data
 }
 
