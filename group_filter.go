@@ -126,6 +126,7 @@ func (f *GroupFilter) Init(config interface{}) error {
 	f.value = conf.Value
 
 	f.data = NewData()
+	fmt.Printf("config %+v", f)
 	return nil
 }
 
@@ -169,6 +170,7 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 		case pack, ok := <-inChan:
 			if !ok {
 				//todo
+				break
 			}
 			f.msgLoopCount = pack.MsgLoopCount
 			f.ProcessMessage(pack.Message)
