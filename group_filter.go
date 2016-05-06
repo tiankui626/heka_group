@@ -155,7 +155,7 @@ func (f *GroupFilter) Init(config interface{}) error {
 	f.data = NewData()
 	f.logger = conf.Logger
 	f.serie = conf.Serie
-	Province = (conf.Province == "1")
+	IsProvince = (conf.Province == "1")
 	Debug = (conf.Debug == "1")
 	if Debug {
 		fmt.Printf("config %+v", f)
