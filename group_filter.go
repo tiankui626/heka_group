@@ -125,7 +125,7 @@ func (f *GroupFilter) Init(config interface{}) error {
 	}
 	f.value = conf.Value
 
-	f.data = &make(map[string]*Value)
+	f.data = NewData()
 	return nil
 }
 
@@ -154,7 +154,11 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	if len(values) > 0 {
 		f.InjectMessage(fr, h, strings.Join(values, "\n"))
 	}
-	f.data = &make(map[string]*Value)
+	f.data = NewData()
+}
+func NewData() *map[string]*Value {
+	data = make(map[string]*Value)
+	return &data
 }
 
 func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper) {
