@@ -120,14 +120,14 @@ func (f *GroupFilter) Init(config interface{}) error {
 	var (
 		err error
 	)
-	tagsConf, _ = getConfString(config, "tags")
-	groupsConf, _ = getConfString(config, "groups")
-	valueConf, _ = getConfString(config, "value")
-	intervalConf, _ = getConfString(config, "ticker_interval")
-	loggerConf, _ = getConfString(config, "logger")
-	serieNameConf, _ = getConfString(config, "serie_name")
-	onlyProvConf, _ = getConfString(config, "only_province")
-	debugConf, _ = getConfString(config, "debug")
+	tagsConf, _ := getConfString(config, "tags")
+	groupsConf, _ := getConfString(config, "groups")
+	valueConf, _ := getConfString(config, "value")
+	intervalConf, _ := getConfString(config, "ticker_interval")
+	loggerConf, _ := getConfString(config, "logger")
+	serieNameConf, _ := getConfString(config, "serie_name")
+	onlyProvConf, _ := getConfString(config, "only_province")
+	debugConf, _ := getConfString(config, "debug")
 	if len(tagsConf) == 0 {
 		return errors.New("No 'tags' setting specified.")
 	} else {
