@@ -123,7 +123,7 @@ func (f *GroupFilter) Init(config interface{}) error {
 	tagsConf, _ := getConfString(config, "tags")
 	groupsConf, _ := getConfString(config, "groups")
 	valueConf, _ := getConfString(config, "value")
-	intervalConf, _ := getConfString(config, "ticker_interval")
+	intervalConf, _ := getConfString(config, "interval")
 	loggerConf, _ := getConfString(config, "logger")
 	serieNameConf, _ := getConfString(config, "serie_name")
 	onlyProvConf, _ := getConfString(config, "only_province")
