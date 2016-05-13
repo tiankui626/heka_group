@@ -1,3 +1,6 @@
+//a heka extention to influxdb
+//@author zzh <zhouzhou@mgtv.com>
+//@date 201605
 package group
 
 import (
@@ -19,31 +22,20 @@ type GroupFilter struct {
 	value         string
 	logger        string
 	serie         string
-	isProvince    bool
+	onlyProvice   bool //private
 	debug         bool
 	FlushInterval time.Duration
 }
 
-type GroupConfig struct {
-	Tags     string `toml:"tags"`
-	Groups   string `toml:"groups"`
-	Interval string `toml:"interval"`
-	Value    string `toml:"value"`
-	Province string
-	Logger   string
-	Debug    string
-	Serie    string
-}
-
 type Value struct {
-	valueName string
-	value     float64
-	counter   int
+	Name    string
+	value   float64
+	counter int
 }
 
 var (
-	Debug      = false
-	IsProvince = false
+	Debug        = false
+	OnlyProvince = false
 )
 
 func getConfString(config interface{}, key string) (string, error) {
@@ -63,10 +55,10 @@ func getConfString(config interface{}, key string) (string, error) {
 }
 
 func (v *Value) Value() string {
-	if len(v.valueName) == 0 || v.value == 0 {
+	if len(v.Name) == 0 || v.value == 0 {
 		return fmt.Sprintf("counter=%d", v.counter)
 	}
-	return fmt.Sprintf("counter=%d,%s=%f", v.counter, v.valueName, v.value)
+	return fmt.Sprintf("counter=%d,%s=%f", v.counter, v.Name, v.value)
 }
 
 func ReadValue(msg *message.Message, key string) string {
@@ -84,7 +76,7 @@ func ReadValue(msg *message.Message, key string) string {
 			break
 		}
 	}
-	if key == "City" && IsProvince && len(value) > 5 {
+	if key == "City" && OnlyProvince && len(value) > 5 {
 		bytes_v := []byte(value)
 		bytes_v[len(bytes_v)-1] = '0'
 		bytes_v[len(bytes_v)-2] = '0'
@@ -112,7 +104,7 @@ func (f *GroupFilter) ProcessMessage(msg *message.Message) {
 	key := tags + " " + groups
 	d, ok := (*f.data)[key]
 	if !ok {
-		d = &Value{valueName: f.value, value: 0, counter: 0}
+		d = &Value{Name: f.value, value: 0, counter: 0}
 		(*f.data)[key] = d
 	}
 	d.counter++
@@ -126,37 +118,36 @@ func (f *GroupFilter) ProcessMessage(msg *message.Message) {
 // Extract hosts value from config and store it on the plugin instance.
 func (f *GroupFilter) Init(config interface{}) error {
 	var (
-		err  error
-		conf GroupConfig
+		err error
 	)
-	conf.Tags, _ = getConfString(config, "tags")
-	conf.Groups, _ = getConfString(config, "groups")
-	conf.Value, _ = getConfString(config, "value")
-	conf.Interval, _ = getConfString(config, "interval")
-	conf.Logger, _ = getConfString(config, "logger")
-	conf.Serie, _ = getConfString(config, "serie")
-	conf.Province, _ = getConfString(config, "province")
-	conf.Debug, _ = getConfString(config, "debug")
-	if len(conf.Tags) == 0 {
+	tagsConf, _ = getConfString(config, "tags")
+	groupsConf, _ = getConfString(config, "groups")
+	valueConf, _ = getConfString(config, "value")
+	intervalConf, _ = getConfString(config, "ticker_interval")
+	loggerConf, _ = getConfString(config, "logger")
+	serieNameConf, _ = getConfString(config, "serie_name")
+	onlyProvConf, _ = getConfString(config, "only_province")
+	debugConf, _ = getConfString(config, "debug")
+	if len(tagsConf) == 0 {
 		return errors.New("No 'tags' setting specified.")
 	} else {
-		f.tags = strings.Split(conf.Tags, " ")
+		f.tags = strings.Split(tagsConf, " ")
 	}
-	if len(conf.Groups) > 0 {
-		f.groups = strings.Split(conf.Groups, " ")
+	if len(groupsConf) > 0 {
+		f.groups = strings.Split(groupsConf, " ")
 	}
-	if len(conf.Interval) == 0 {
+	if len(intervalConf) == 0 {
 		return errors.New("No 'interval' setting specified.")
-	} else if f.FlushInterval, err = time.ParseDuration(conf.Interval); err != nil {
+	} else if f.FlushInterval, err = time.ParseDuration(intervalConf); err != nil {
 		return errors.New("No 'interval' parse error.")
 	}
-	f.value = conf.Value
 
+	f.value = valueConf
 	f.data = NewData()
-	f.logger = conf.Logger
-	f.serie = conf.Serie
-	IsProvince = (conf.Province == "1")
-	Debug = (conf.Debug == "1")
+	f.logger = loggerConf
+	f.serie = serieNameConf
+	OnlyProvince = (onlyProvConf == "1")
+	Debug = (debugConf == "1")
 	if Debug {
 		fmt.Printf("config %+v", f)
 	}
@@ -200,6 +191,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	}
 	f.data = NewData()
 }
+
 func NewData() *map[string]*Value {
 	data := make(map[string]*Value)
 	return &data
@@ -212,7 +204,6 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 		select {
 		case pack, ok := <-inChan:
 			if !ok {
-				//todo
 				goto end
 			}
 			f.msgLoopCount = pack.MsgLoopCount
@@ -226,6 +217,7 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 		}
 	}
 end:
+	f.comitter(fr, h)
 	return
 }
 
