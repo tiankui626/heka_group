@@ -3,6 +3,7 @@
 a heka extention to group data and format the data as influxdb lines
 
 # params
+
     * tags: influxdb tags fielname, seperated by " "
     * groups: influxdb values fiels, seperated by " "
     * value: counter value 
@@ -11,6 +12,8 @@ a heka extention to group data and format the data as influxdb lines
     * serie_name: influxdb seria name
     * only_province: private uses
     * debug: private uses
+
+# sample debug info for example
 ```
 2016/05/03 15:39:24
 :Timestamp: 2016-04-28 15:38:59 +0000 UTC
@@ -34,31 +37,5 @@ a heka extention to group data and format the data as influxdb lines
     | name:"Uid" type:string value:"fa38fa660f57c1f5"
 
 
-AdserverId,Hostname=test2 value="VyG-E3o9EWD3rPkc" 1461857939
-Slot,Hostname=test2 value="106751" 1461857939
-PlatForm,Hostname=test2 value="32" 1461857939
-Vid,Hostname=test2 value="3111479" 1461857939
-PlatForm,Hostname=test2 value="32" 1461857939
-City,Hostname=test2 value="1156310000" 1461857939
-Slot,Hostname=test2 value="106751" 1461857939
-PmpId,Hostname=test2 value="f11f8cd10bd4461f86884367fb222903" 1461857939
-AdserverId,Hostname=test2 value="VyG-E3o9EWD3rPkc" 1461857939
-Channel,Hostname=test2 value="29,34" 1461857939
-Uid,Hostname=test2 value="865188022658857" 1461857939
-Vid,Hostname=test2 value="61702" 1461857938
-PlatForm,Hostname=test2 value="32" 1461857938
-City,Hostname=test2 value="1156310000" 1461857938
-Slot,Hostname=test2 value="106752" 1461857938
-PmpId,Hostname=test2 value="28e4f5e7ec1d4b79880d3a2928eea1e9" 1461857938
-AdserverId,Hostname=test2 value="VyG-EsmA8nmSatss" 1461857938
-Uid,Hostname=test2 value="357947040310766" 1461857938
-Channel,Hostname=test2 value="29,28,27,36" 1461857938
-Vid,Hostname=test2 value="3129928" 1461857939
-Uid,Hostname=test2 value="fa38fa660f57c1f5" 1461857939
-City,Hostname=test2 value="1156310000" 1461857939
-Channel,Hostname=test2 value="161" 1461857939
-PmpId,Hostname=test2 value="3dca1b38f0754161948d80d6c568d676" 1461857939
-AdserverId,Hostname=test2 value="VyG-E3iwmzchRFM_" 1461857939
-Slot,Hostname=test2 value="106751" 1461857939
-PlatForm,Hostname=test2 value="32" 1461857939
+test,AdserverId,Hostname=test2 value="VyG-E3o9EWD3rPkc"
 ```
