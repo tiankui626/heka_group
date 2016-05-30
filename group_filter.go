@@ -217,7 +217,7 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 		}
 	}
 end:
-	f.comitter(fr, h)
+	f.comitter(fr, h, f.data)
 	return
 }
 
