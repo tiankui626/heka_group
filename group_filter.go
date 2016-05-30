@@ -213,7 +213,8 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 			if Debug {
 				fmt.Println("a tick")
 			}
-			f.comitter(fr, h)
+			go f.comitter(fr, h)
+			f.data = NewData()
 		}
 	}
 end:
