@@ -209,7 +209,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	if len(*data) == 0 {
 		return
 	} else if Debug {
-		fmt.Printf("data len:%d", len(*data))
+		fmt.Printf("data len:%d\n", len(*data))
 	}
 	var values []string
 	for key, v := range *data {
@@ -217,6 +217,9 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 		if len(dv) == 0 {
 			fmt.Printf("data values is empty")
 			continue
+		}
+		if Debug {
+			fmt.Printf("values: %s,%s %s\n", f.serie, key, dv)
 		}
 		values = append(values, fmt.Sprintf("%s,%s %s", f.serie, key, dv))
 		if len(values) > 100 {
