@@ -55,10 +55,10 @@ func getConfString(config interface{}, key string) (string, error) {
 }
 
 func (v *Value) Value() string {
-	if len(v.Name) == 0 || v.value == 0 {
+	if len(v.Name) == 0 || v.value == 0 || v.counter == 0 {
 		return fmt.Sprintf("counter=%d", v.counter)
 	}
-	return fmt.Sprintf("counter=%d,%s=%f", v.counter, v.Name, v.value)
+	return fmt.Sprintf("counter=%d,%s=%f", v.counter, v.Name, v.value/float64(v.counter))
 }
 
 func ReadValue(msg *message.Message, key string) string {
