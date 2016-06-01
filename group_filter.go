@@ -205,7 +205,7 @@ func (f *GroupFilter) InjectMessage(fr pipeline.FilterRunner, h pipeline.PluginH
 	return nil
 }
 
-func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper, data *map[string]*[]Value) {
+func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper, data *map[string][]*Value) {
 	if len(*data) == 0 {
 		return
 	} else if Debug {
@@ -213,7 +213,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	}
 	var values []string
 	for key, v := range *data {
-		dv := DataValues(values)
+		dv := DataValues(v)
 		if len(dv) == 0 {
 			fmt.Printf("data values is empty")
 			continue
