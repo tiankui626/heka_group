@@ -72,7 +72,10 @@ func ReadValue(msg *message.Message, key string) string {
 	fields := msg.GetFields()
 	for _, f := range fields {
 		if f.GetName() == key {
-			value = f.GetValueString()[0]
+			vs := f.GetValueString()
+			if vs != nil {
+				value = vs[0]
+			}
 			break
 		}
 	}
