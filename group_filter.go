@@ -16,10 +16,10 @@ import (
 
 type GroupFilter struct {
 	msgLoopCount  uint
-	data          *map[string]*Value
+	data          *map[string][]*Value
 	tags          []string
 	groups        []string
-	value         string
+	values        []string
 	logger        string
 	serie         string
 	onlyProvice   bool //private
@@ -55,10 +55,27 @@ func getConfString(config interface{}, key string) (string, error) {
 }
 
 func (v *Value) Value() string {
-	if len(v.Name) == 0 || v.value == 0 || v.counter == 0 {
+	if len(v.Name) == 0 {
 		return fmt.Sprintf("counter=%d", v.counter)
 	}
-	return fmt.Sprintf("counter=%d,%s=%f", v.counter, v.Name, v.value/float64(v.counter))
+	if v.counter != 0 {
+		return fmt.Sprintf("counter_%s=%d,%s=%f", v.Name, v.counter, v.Name, v.value/float64(v.counter))
+	}
+	return ""
+}
+
+func DataValues(values []*Value) string {
+	if len(values) == 0 {
+		return ""
+	}
+	var dvs []string
+	for _, v := range values {
+		s := v.Value()
+		if len(s) != 0 {
+			dvs = append(dvs, s)
+		}
+	}
+	return strings.Join(dvs, ",")
 }
 
 func ReadValue(msg *message.Message, key string) string {
@@ -107,14 +124,30 @@ func (f *GroupFilter) ProcessMessage(msg *message.Message) {
 	key := tags + " " + groups
 	d, ok := (*f.data)[key]
 	if !ok {
-		d = &Value{Name: f.value, value: 0, counter: 0}
+		if len(f.values) == 0 {
+			//values is empty
+			d = append(d, &Value{Name: "", value: 0, counter: 0})
+		} else {
+			for _, v := range f.values {
+				d = append(d, &Value{Name: v, value: 0, counter: 0})
+			}
+		}
+
 		(*f.data)[key] = d
 	}
-	d.counter++
-	v := ReadValue(msg, f.value)
-	v_float, e := strconv.ParseFloat(v, 64)
-	if e == nil {
-		d.value += v_float
+	for _, value := range d {
+		if len(value.Name) == 0 {
+			//no values in config
+			value.counter++
+		} else {
+			v := ReadValue(msg, value.Name)
+			v_float, e := strconv.ParseFloat(v, 64)
+			if e == nil {
+				//value key exists in msg
+				value.value += v_float
+				value.counter++
+			}
+		}
 	}
 }
 
@@ -125,7 +158,7 @@ func (f *GroupFilter) Init(config interface{}) error {
 	)
 	tagsConf, _ := getConfString(config, "tags")
 	groupsConf, _ := getConfString(config, "groups")
-	valueConf, _ := getConfString(config, "value")
+	valuesConf, _ := getConfString(config, "values")
 	intervalConf, _ := getConfString(config, "interval")
 	loggerConf, _ := getConfString(config, "logger")
 	serieNameConf, _ := getConfString(config, "serie_name")
@@ -145,7 +178,7 @@ func (f *GroupFilter) Init(config interface{}) error {
 		return errors.New("No 'interval' parse error.")
 	}
 
-	f.value = valueConf
+	f.values = strings.Split(valuesConf, " ")
 	f.data = NewData()
 	f.logger = loggerConf
 	f.serie = serieNameConf
@@ -172,15 +205,20 @@ func (f *GroupFilter) InjectMessage(fr pipeline.FilterRunner, h pipeline.PluginH
 	return nil
 }
 
-func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper, data *map[string]*Value) {
+func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper, data *map[string]*[]Value) {
 	if len(*data) == 0 {
 		return
 	} else if Debug {
-		fmt.Printf("data len:%s", len(*data))
+		fmt.Printf("data len:%d", len(*data))
 	}
 	var values []string
 	for key, v := range *data {
-		values = append(values, fmt.Sprintf("%s,%s %s", f.serie, key, v.Value()))
+		dv := DataValues(values)
+		if len(dv) == 0 {
+			fmt.Printf("data values is empty")
+			continue
+		}
+		values = append(values, fmt.Sprintf("%s,%s %s", f.serie, key, dv))
 		if len(values) > 100 {
 			f.InjectMessage(fr, h, strings.Join(values, "\n"))
 			if Debug {
@@ -194,8 +232,8 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	}
 }
 
-func NewData() *map[string]*Value {
-	data := make(map[string]*Value)
+func NewData() *map[string][]*Value {
+	data := make(map[string][]*Value)
 	return &data
 }
 
