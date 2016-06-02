@@ -25,6 +25,7 @@ type GroupFilter struct {
 	onlyProvice   bool //private
 	debug         bool
 	FlushInterval time.Duration
+	batchNum      int
 }
 
 type Value struct {
@@ -164,6 +165,7 @@ func (f *GroupFilter) Init(config interface{}) error {
 	serieNameConf, _ := getConfString(config, "serie_name")
 	onlyProvConf, _ := getConfString(config, "only_province")
 	debugConf, _ := getConfString(config, "debug")
+	batchNumConf, _ := getConfString(config, "batch_num")
 	if len(tagsConf) == 0 {
 		return errors.New("No 'tags' setting specified.")
 	} else {
@@ -176,6 +178,13 @@ func (f *GroupFilter) Init(config interface{}) error {
 		return errors.New("No 'interval' setting specified.")
 	} else if f.FlushInterval, err = time.ParseDuration(intervalConf); err != nil {
 		return errors.New("No 'interval' parse error.")
+	}
+
+	batchNum, err := strconv.Atoi(batchNumConf)
+	if err != nil {
+		f.batchNum = 100
+	} else {
+		f.batchNum = batchNum
 	}
 
 	f.values = strings.Split(valuesConf, " ")
@@ -222,7 +231,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 			fmt.Printf("values: %s,%s %s\n", f.serie, key, dv)
 		}
 		values = append(values, fmt.Sprintf("%s,%s %s", f.serie, key, dv))
-		if len(values) > 100 {
+		if len(values) > f.batchNum {
 			f.InjectMessage(fr, h, strings.Join(values, "\n"))
 			if Debug {
 				fmt.Println(strings.Join(values, "\n"))
@@ -247,15 +256,13 @@ func (f *GroupFilter) receiver(fr pipeline.FilterRunner, h pipeline.PluginHelper
 		select {
 		case pack, ok := <-inChan:
 			if !ok {
+				fmt.Printf("inChan error\n")
 				goto end
 			}
 			f.msgLoopCount = pack.MsgLoopCount
 			f.ProcessMessage(pack.Message)
 			pack.Recycle(nil)
 		case <-ticker:
-			if Debug {
-				fmt.Println("a tick")
-			}
 			go f.comitter(fr, h, f.data)
 			f.data = NewData()
 		}
