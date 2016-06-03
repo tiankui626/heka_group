@@ -97,7 +97,7 @@ func ReadValue(msg *message.Message, key string) string {
 			break
 		}
 	}
-	if strings.ToLower(key) == "city" && OnlyProvince && len(value) > 5 {
+	if (strings.ToLower(key) == "city" || strings.ToLower(key) == "cc") && OnlyProvince && len(value) > 5 {
 		bytes_v := []byte(value)
 		bytes_v[len(bytes_v)-1] = '0'
 		bytes_v[len(bytes_v)-2] = '0'
