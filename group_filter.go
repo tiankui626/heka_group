@@ -90,11 +90,23 @@ func ReadValue(msg *message.Message, key string) string {
 	fields := msg.GetFields()
 	for _, f := range fields {
 		if f.GetName() == key {
-			vs := f.GetValueString()
-			if vs != nil {
-				value = vs[0]
+			t := f.GetValueType()
+			if t == message.Field_STRING {
+				vs := f.GetValueString()
+				if vs != nil {
+					value = vs[0]
+				}
+				break
+			} else if t == message.Field_DOUBLE {
+				vs := f.GetValueDouble()
+				if vs != nil {
+					value = strconv.FormatFloat(vs[0], 'f', 2, 64)
+				}
+				break
+			} else {
+				//TODO
+				fmt.Printf("unsupport filed now\n")
 			}
-			break
 		}
 	}
 	if (strings.ToLower(key) == "city" || strings.ToLower(key) == "cc") && OnlyProvince && len(value) > 5 {
@@ -224,7 +236,7 @@ func (f *GroupFilter) comitter(fr pipeline.FilterRunner, h pipeline.PluginHelper
 	for key, v := range *data {
 		dv := DataValues(v)
 		if len(dv) == 0 {
-			fmt.Printf("data values is empty")
+			fmt.Printf("data values is empty\n")
 			continue
 		}
 		if Debug {
